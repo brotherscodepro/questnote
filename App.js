@@ -1,53 +1,110 @@
-import * as React from "react";
-import { NavigationContainer, DarkTheme } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
+import React from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View, StyleSheet, Platform } from 'react-native';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import HomeScreen from "./screens/HomeScreen";
-import NotesScreen from "./screens/NotesScreen";
-import MissionsScreen from "./screens/MissionsScreen";
-import QuestsScreen from "./screens/QuestsScreen";
-import ProfileScreen from "./screens/ProfileScreen";
+import HomeScreen from './screens/HomeScreen';
+import NotesScreen from './screens/NotesScreen';
+import MissionsScreen from './screens/MissionsScreen';
+import QuestsScreen from './screens/QuestsScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import { COLORS } from './constants/theme';
 
 const Tab = createBottomTabNavigator();
 
+function TabIcon({ name, focused, library = 'ionicons' }) {
+  const color = focused ? COLORS.primary : COLORS.textMuted;
+  const size = 22;
+
+  if (library === 'material') {
+    return <MaterialCommunityIcons name={name} size={size} color={color} />;
+  }
+  if (library === 'fontawesome') {
+    return <FontAwesome5 name={name} size={size - 2} color={color} />;
+  }
+  return <Ionicons name={name} size={size} color={color} />;
+}
+
 export default function App() {
   return (
-    <NavigationContainer theme={DarkTheme}>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarActiveTintColor: "#ffd66b",
-          tabBarInactiveTintColor: "#8b8b8b",
-          tabBarStyle: {
-            backgroundColor: "#090b18",
-            borderTopColor: "#23263a",
-            height: 76,
-            paddingBottom: 10,
-            paddingTop: 8,
-          },
-          tabBarLabelStyle: {
-            fontSize: 12,
-          },
-          tabBarIcon: ({ color, size }) => {
-            let iconName = "ellipse";
-
-            if (route.name === "Mundo") iconName = "planet";
-            if (route.name === "Notas") iconName = "book";
-            if (route.name === "Listas") iconName = "list";
-            if (route.name === "Tarefas") iconName = "checkbox";
-            if (route.name === "Perfil") iconName = "person";
-
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-        })}
-      >
-        <Tab.Screen name="Mundo" component={HomeScreen} />
-        <Tab.Screen name="Notas" component={NotesScreen} />
-        <Tab.Screen name="Listas" component={MissionsScreen} />
-        <Tab.Screen name="Tarefas" component={QuestsScreen} />
-        <Tab.Screen name="Perfil" component={ProfileScreen} />
-      </Tab.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <Tab.Navigator
+          screenOptions={{
+            headerShown: false,
+            tabBarStyle: styles.tabBar,
+            tabBarActiveTintColor: COLORS.primary,
+            tabBarInactiveTintColor: COLORS.textMuted,
+            tabBarLabelStyle: styles.tabLabel,
+            tabBarShowLabel: true,
+          }}
+        >
+          <Tab.Screen
+            name="Mundo"
+            component={HomeScreen}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <TabIcon name={focused ? 'home' : 'home-outline'} focused={focused} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Notas"
+            component={NotesScreen}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <TabIcon name={focused ? 'document-text' : 'document-text-outline'} focused={focused} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Listas"
+            component={MissionsScreen}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <TabIcon name={focused ? 'list' : 'list-outline'} focused={focused} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Tarefas"
+            component={QuestsScreen}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <TabIcon name={focused ? 'checkbox' : 'checkbox-outline'} focused={focused} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Perfil"
+            component={ProfileScreen}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <TabIcon name={focused ? 'person' : 'person-outline'} focused={focused} />
+              ),
+            }}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: COLORS.backgroundSecondary,
+    borderTopColor: COLORS.border,
+    borderTopWidth: 1,
+    height: Platform.OS === 'ios' ? 88 : 65,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+    paddingTop: 8,
+  },
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+});

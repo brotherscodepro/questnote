@@ -1,196 +1,239 @@
-import * as React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import ProgressBar from '../components/ProgressBar';
+import { COLORS, SPACING, RADIUS } from '../constants/theme';
+import { MISSIONS } from '../constants/data';
 
-const missionsData = [
-  {
-    id: "1",
-    title: "Supermercado",
-    progress: "5 / 8 itens",
-    reward: "+25 XP",
-    icon: "cart",
-    color: "#22c55e",
-  },
-  {
-    id: "2",
-    title: "Projeto App",
-    progress: "4 / 10 tarefas",
-    reward: "+60 XP",
-    icon: "laptop",
-    color: "#7c5cff",
-  },
-  {
-    id: "3",
-    title: "Viagem Lisboa",
-    progress: "2 / 7 passos",
-    reward: "+40 XP",
-    icon: "airplane",
-    color: "#f59e0b",
-  },
-];
+const TABS = ['Ativas', 'Completas', 'Recorrentes'];
 
 export default function MissionsScreen() {
+  const [activeTab, setActiveTab] = useState('Ativas');
+
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.phoneHeader}>
-        <Text style={styles.phoneHeaderText}>3. LISTAS (MISSÕES)</Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>AS MINHAS MISSÕES</Text>
       </View>
 
-      <Text style={styles.pageTitle}>AS MINHAS MISSÕES</Text>
-
-      <View style={styles.topTabsRow}>
-        {["Ativas", "Completas", "Recorrentes"].map((item, idx) => (
-          <View
-            key={item}
-            style={[styles.topTab, idx === 0 && styles.topTabActive]}
+      {/* Tabs */}
+      <View style={styles.tabs}>
+        {TABS.map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[styles.tab, activeTab === tab && styles.tabActive]}
+            onPress={() => setActiveTab(tab)}
           >
-            <Text
-              style={[
-                styles.topTabText,
-                idx === 0 && styles.topTabTextActive,
-              ]}
-            >
-              {item}
+            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+              {tab}
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
 
-      {missionsData.map((item) => (
-        <View key={item.id} style={styles.missionCard}>
-          <View style={styles.missionLeft}>
-            <View
-              style={[styles.missionIconBox, { borderColor: item.color }]}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+      >
+        {MISSIONS.map((mission) => {
+          const progress = (mission.progress / mission.total) * 100;
+          return (
+            <TouchableOpacity
+              key={mission.id}
+              style={styles.missionCard}
+              activeOpacity={0.7}
             >
-              <Ionicons name={item.icon} size={22} color={item.color} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.missionTitle}>{item.title}</Text>
-              <Text style={styles.missionProgress}>{item.progress}</Text>
-              <View style={styles.missionRewardRow}>
-                <Text style={styles.rewardLabel}>RECOMPENSA</Text>
-                <Text style={styles.rewardValue}>{item.reward}</Text>
+              <View style={styles.missionHeader}>
+                <View style={styles.missionTitleRow}>
+                  <View style={[styles.missionIcon, { backgroundColor: mission.color + '25' }]}>
+                    <Text style={styles.missionEmoji}>{mission.icon}</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.missionTitle}>{mission.title}</Text>
+                    <Text style={styles.missionProgress}>
+                      {mission.progress} / {mission.total} itens
+                    </Text>
+                  </View>
+                </View>
+                {mission.starred && (
+                  <Ionicons name="star" size={18} color={COLORS.secondary} />
+                )}
               </View>
-            </View>
-          </View>
-        </View>
-      ))}
 
-      <View style={styles.addNewBox}>
-        <Text style={styles.addNewText}>+ Criar nova missão</Text>
-      </View>
-    </ScrollView>
+              <ProgressBar progress={progress} height={6} color={mission.color} />
+
+              <View style={styles.missionFooter}>
+                <Text style={styles.rewardLabel}>RECOMPENSA</Text>
+                <View style={styles.rewards}>
+                  <View style={styles.rewardBadge}>
+                    <Text style={styles.rewardXp}>+{mission.xp} XP</Text>
+                  </View>
+                  <View style={styles.rewardCoins}>
+                    <MaterialCommunityIcons name="circle-multiple" size={12} color={COLORS.secondary} />
+                    <Text style={styles.rewardCoinsText}>{mission.coins}</Text>
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+
+        {/* Create Mission */}
+        <TouchableOpacity style={styles.createBtn} activeOpacity={0.7}>
+          <Ionicons name="add" size={20} color={COLORS.primary} />
+          <Text style={styles.createText}>Criar nova missão</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
-    backgroundColor: "#050814",
+    backgroundColor: COLORS.background,
   },
-  content: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    paddingTop: 16,
+  header: {
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.sm,
+    paddingBottom: SPACING.md,
   },
-  phoneHeader: {
-    paddingBottom: 8,
+  headerTitle: {
+    color: COLORS.text,
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
-  phoneHeaderText: {
-    color: "#8e8f9e",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 1.2,
-  },
-  pageTitle: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "900",
-    marginBottom: 12,
-  },
-  topTabsRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 12,
-  },
-  topTab: {
-    backgroundColor: "#10152a",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
+  tabs: {
+    flexDirection: 'row',
+    marginHorizontal: SPACING.lg,
+    backgroundColor: COLORS.backgroundCard,
+    borderRadius: RADIUS.md,
+    padding: 4,
+    marginBottom: SPACING.lg,
     borderWidth: 1,
-    borderColor: "#23293f",
+    borderColor: COLORS.border,
   },
-  topTabActive: {
-    backgroundColor: "#3a2f7a",
-    borderColor: "#7c5cff",
+  tab: {
+    flex: 1,
+    paddingVertical: SPACING.sm,
+    alignItems: 'center',
+    borderRadius: RADIUS.sm,
   },
-  topTabText: {
-    color: "#cbd5e1",
-    fontWeight: "700",
-    fontSize: 12,
+  tabActive: {
+    backgroundColor: COLORS.primary,
   },
-  topTabTextActive: {
-    color: "#fff",
+  tabText: {
+    color: COLORS.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  tabTextActive: {
+    color: '#FFF',
+  },
+  scroll: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: 40,
   },
   missionCard: {
-    marginBottom: 12,
-    backgroundColor: "#10152a",
-    borderRadius: 18,
+    backgroundColor: COLORS.backgroundCard,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
     borderWidth: 1,
-    borderColor: "#23293f",
-    padding: 14,
+    borderColor: COLORS.border,
   },
-  missionLeft: {
-    flexDirection: "row",
-    gap: 12,
-    alignItems: "center",
+  missionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
   },
-  missionIconBox: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#0c1326",
+  missionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  missionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  missionEmoji: {
+    fontSize: 22,
   },
   missionTitle: {
-    color: "#fff",
+    color: COLORS.text,
     fontSize: 16,
-    fontWeight: "800",
+    fontWeight: '700',
   },
   missionProgress: {
-    color: "#cbd5e1",
-    marginTop: 2,
+    color: COLORS.textMuted,
     fontSize: 12,
+    marginTop: 2,
   },
-  missionRewardRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
+  missionFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: SPACING.md,
   },
   rewardLabel: {
-    color: "#9ca3af",
-    fontSize: 10,
-    fontWeight: "700",
+    color: COLORS.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
   },
-  rewardValue: {
-    color: "#ffd66b",
+  rewards: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  rewardBadge: {
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 3,
+    borderRadius: RADIUS.sm,
+  },
+  rewardXp: {
+    color: COLORS.primaryLight,
     fontSize: 12,
-    fontWeight: "800",
+    fontWeight: '700',
   },
-  addNewBox: {
-    marginTop: 8,
-    borderRadius: 16,
+  rewardCoins: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  rewardCoinsText: {
+    color: COLORS.secondary,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  createBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    paddingVertical: SPACING.lg,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
-    borderColor: "#343a54",
-    borderStyle: "dashed",
-    paddingVertical: 18,
-    alignItems: "center",
+    borderColor: COLORS.border,
+    borderStyle: 'dashed',
+    marginTop: SPACING.sm,
   },
-  addNewText: {
-    color: "#c4b5fd",
-    fontWeight: "700",
+  createText: {
+    color: COLORS.primaryLight,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

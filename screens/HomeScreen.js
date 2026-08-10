@@ -1,426 +1,435 @@
-import * as React from "react";
+import React, { useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+  TouchableOpacity,
+  Dimensions,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Video, ResizeMode } from 'expo-av';
+import ProgressBar from '../components/ProgressBar';
+import { USER, DAILY_QUESTS } from '../constants/data';
+
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
+const HERO_H = Math.round(SCREEN_H * 0.52);
+
+function getCharacter(level) {
+  if (level >= 20) return { title: 'Arquimago', color: '#A78BFA', key: 'arquimago' };
+  if (level >= 15) return { title: 'Herói', color: '#F59E0B', key: 'heroi' };
+  if (level >= 10) return { title: 'Explorador', color: '#8B5CF6', key: 'explorador' };
+  if (level >= 5) return { title: 'Aventureiro', color: '#3B82F6', key: 'aventureiro' };
+  return { title: 'Novato', color: '#22C55E', key: 'novato' };
+}
+
+const VIDEOS = {
+  novato: require('../assets/characters/novato.mp4'),
+  aventureiro: require('../assets/characters/aventureiro.mp4'),
+  explorador: require('../assets/characters/explorador.mp4'),
+  heroi: require('../assets/characters/heroi.mp4'),
+  arquimago: require('../assets/characters/arquimago.mp4'),
+};
 
 export default function HomeScreen() {
-  const [xp, setXp] = React.useState(1840);
-  const [level, setLevel] = React.useState(12);
-  const [questDone, setQuestDone] = React.useState(false);
-
-  const currentLevelXp = 2000;
-  const progress = xp / currentLevelXp;
-
-  const completeQuest = () => {
-    if (questDone) return;
-    setQuestDone(true);
-    setXp((prev) => prev + 25);
-  };
+  const character = getCharacter(USER.level);
+  const videoRef = useRef(null);
+  const insets = useSafeAreaInsets();
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      {/* Cabeçalho */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.brand}>QUESTNOTE</Text>
-          <Text style={styles.brandSub}>ORGANIZA A TUA VIDA.</Text>
-          <Text style={styles.brandSub}>VIVE A TUA AVENTURA.</Text>
-        </View>
+    <View style={styles.root}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        contentContainerStyle={{ paddingBottom: 30 }}
+      >
+        {/* HERO */}
+        <View style={[styles.hero, { height: HERO_H + insets.top }]}>
+          <Video
+            ref={videoRef}
+            source={VIDEOS[character.key]}
+            style={{
+              position: 'absolute',
+              width: SCREEN_W,
+              height: HERO_H + 80,
+              top: -25,
+              left: 0,
+            }}
+            resizeMode={ResizeMode.COVER}
+            shouldPlay
+            isLooping
+            isMuted
+          />
 
-        <View style={styles.headerRight}>
-          <Ionicons name="sparkles" size={18} color="#ffd66b" />
-          <Text style={styles.headerXp}>{xp} XP</Text>
-        </View>
-      </View>
+          <View style={[styles.overlay, { paddingTop: insets.top + 8 }]}>
+            {/* Top bar only at top */}
+            <View style={styles.topBar}>
+              <TouchableOpacity style={styles.circleBtn}>
+                <Ionicons name="menu" size={22} color="#FFF" />
+              </TouchableOpacity>
+              <View style={styles.currencyRow}>
+                <View style={styles.pill}>
+                  <Text style={{ fontSize: 13 }}>🪙</Text>
+                  <Text style={styles.pillText}>{USER.coins}</Text>
+                </View>
+                <View style={styles.pill}>
+                  <Text style={{ fontSize: 12 }}>💎</Text>
+                  <Text style={styles.pillText}>{USER.energy}</Text>
+                </View>
+                <TouchableOpacity style={styles.plusBtn}>
+                  <Ionicons name="add" size={16} color="#FFF" />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-      {/* Card conceito / sistema */}
-      <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>CONCEITO</Text>
-        <Text style={styles.infoText}>
-          Cada ação do dia-a-dia faz o teu personagem crescer e o teu mundo
-          evoluir.
-        </Text>
+            {/* Spacer — character occupies the middle */}
+            <View style={{ flex: 1 }} />
 
-        <View style={styles.divider} />
+            {/* Level + XP BELOW the character */}
+            <View style={styles.levelBlock}>
+              <Text style={styles.levelText}>LEVEL {USER.level}</Text>
+              <Text style={[styles.classText, { color: character.color }]}>
+                {character.title.toUpperCase()}
+              </Text>
+              <View style={styles.xpWrap}>
+                <ProgressBar
+                  progress={(USER.xp / USER.xpMax) * 100}
+                  height={8}
+                  color="#A78BFA"
+                  bgColor="rgba(255,255,255,0.25)"
+                />
+              </View>
+              <Text style={styles.xpLabel}>
+                {USER.xp.toLocaleString('pt-PT')} / {USER.xpMax.toLocaleString('pt-PT')} XP
+              </Text>
+            </View>
 
-        <Text style={styles.infoTitle}>SISTEMA</Text>
-
-        <View style={styles.systemRow}>
-          <Ionicons name="sparkles" size={16} color="#ffd66b" />
-          <View style={styles.systemTextBox}>
-            <Text style={styles.systemLabel}>XP</Text>
-            <Text style={styles.systemSub}>Sobe de nível</Text>
+            {/* Side badges — mid height */}
+            <View style={styles.badgesAbsolute}>
+              <View style={styles.badgeCol}>
+                <View style={styles.badge}>
+                  <View style={[styles.badgeIcon, { backgroundColor: 'rgba(239,68,68,0.3)' }]}>
+                    <Ionicons name="flame" size={16} color="#EF4444" />
+                  </View>
+                  <Text style={styles.badgeNum}>{USER.streak}</Text>
+                  <Text style={styles.badgeLbl}>DIAS</Text>
+                </View>
+                <View style={[styles.badge, { marginTop: 10 }]}>
+                  <View style={[styles.badgeIcon, { backgroundColor: 'rgba(245,158,11,0.3)' }]}>
+                    <Ionicons name="star" size={14} color="#F59E0B" />
+                  </View>
+                  <Text style={styles.badgeNum}>{USER.multiplier}x</Text>
+                  <Text style={styles.badgeLbl}>MULTI</Text>
+                </View>
+              </View>
+              <View style={styles.badgeCol}>
+                <TouchableOpacity style={styles.circleBtn}>
+                  <Ionicons name="pencil" size={14} color="#A78BFA" />
+                </TouchableOpacity>
+                <View style={[styles.banner, { marginTop: 10 }]}>
+                  <Text style={{ fontSize: 18 }}>⚔️</Text>
+                </View>
+              </View>
+            </View>
           </View>
         </View>
 
-        <View style={styles.systemRow}>
-          <Ionicons name="ellipse" size={16} color="#a855f7" />
-          <View style={styles.systemTextBox}>
-            <Text style={styles.systemLabel}>MOEDAS</Text>
-            <Text style={styles.systemSub}>Desbloqueia itens</Text>
-          </View>
-        </View>
+        {/* Content */}
+        <View style={styles.sheet}>
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="compass" size={16} color="#D4AF37" />
+                <Text style={styles.cardTitle}>QUEST DO DIA</Text>
+              </View>
+              <Text style={styles.timer}>23h 18m restantes</Text>
+            </View>
 
-        <View style={styles.systemRow}>
-          <Ionicons name="flame" size={16} color="#f97316" />
-          <View style={styles.systemTextBox}>
-            <Text style={styles.systemLabel}>STREAK</Text>
-            <Text style={styles.systemSub}>Multiplicador de XP</Text>
+            {DAILY_QUESTS.map((q, i) => {
+              const done = q.completed;
+              const pct = (q.progress / q.total) * 100;
+              return (
+                <View key={q.id} style={styles.questRow}>
+                  <View style={[styles.qIcon, done && { backgroundColor: '#22C55E' }]}>
+                    {done ? (
+                      <Ionicons name="checkmark" size={15} color="#FFF" />
+                    ) : i === 0 ? (
+                      <MaterialCommunityIcons name="sword-cross" size={15} color="#A78BFA" />
+                    ) : i === 1 ? (
+                      <Ionicons name="document-text" size={15} color="#A78BFA" />
+                    ) : (
+                      <Ionicons name="create" size={15} color="#A78BFA" />
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.qName, done && { color: 'rgba(255,255,255,0.4)' }]}>
+                      {q.title}
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text style={styles.qProg}>{q.progress}/{q.total}</Text>
+                      <View style={{ flex: 1, maxWidth: 90 }}>
+                        <ProgressBar
+                          progress={pct}
+                          height={4}
+                          color={done ? '#22C55E' : '#8B5CF6'}
+                          bgColor="rgba(255,255,255,0.08)"
+                        />
+                      </View>
+                    </View>
+                  </View>
+                  {done ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <Text style={{ color: '#22C55E', fontSize: 12, fontWeight: '700' }}>+{q.xp} XP</Text>
+                      <Ionicons name="checkmark-circle" size={15} color="#22C55E" />
+                    </View>
+                  ) : (
+                    <Text style={{ color: '#D4AF37', fontSize: 12, fontWeight: '700' }}>+{q.xp} XP</Text>
+                  )}
+                </View>
+              );
+            })}
           </View>
-        </View>
 
-        <View style={styles.systemRow}>
-          <Ionicons name="battery-charging" size={16} color="#22c55e" />
-          <View style={styles.systemTextBox}>
-            <Text style={styles.systemLabel}>ENERGIA</Text>
-            <Text style={styles.systemSub}>Usa para focar</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Card nível e personagem */}
-      <View style={styles.levelCard}>
-        <View style={styles.levelHeaderRow}>
-          <View>
-            <Text style={styles.levelLabel}>Nível atual</Text>
-            <Text style={styles.levelText}>Level {level}</Text>
-          </View>
-          <View style={styles.levelStatsBox}>
-            <Text style={styles.levelStat}>14 dias</Text>
-            <Text style={styles.levelStat}>1.3x streak</Text>
-          </View>
-        </View>
-
-        <View style={styles.xpRow}>
-          <View style={{ flex: 1 }}>
-            <View style={styles.xpBarBg}>
-              <View
-                style={[
-                  styles.xpBarFill,
-                  { width: `${progress * 100}%` },
-                ]}
+          <View style={[styles.card, styles.chestCard]}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#D4AF37', fontSize: 12, fontWeight: '800', letterSpacing: 0.8, marginBottom: 4 }}>
+                RECOMPENSA DO BAÚ
+              </Text>
+              <Text style={{ color: '#F5E6C8', fontSize: 13, fontWeight: '600', marginBottom: 10 }}>
+                Alcança 2.000 XP
+              </Text>
+              <ProgressBar
+                progress={(USER.xp / USER.xpMax) * 100}
+                height={8}
+                color="#D4AF37"
+                bgColor="rgba(212,175,55,0.12)"
               />
+              <Text style={{ color: 'rgba(212,175,55,0.6)', fontSize: 11, fontWeight: '600', marginTop: 5 }}>
+                {USER.xp.toLocaleString('pt-PT')} / {USER.xpMax.toLocaleString('pt-PT')}
+              </Text>
+            </View>
+            <View style={styles.chestBox}>
+              <MaterialCommunityIcons name="treasure-chest" size={40} color="#D4AF37" />
             </View>
           </View>
-          <Text style={styles.xpText}>
-            {xp} / {currentLevelXp} XP
-          </Text>
         </View>
-
-        <View style={styles.characterBox}>
-          <Text style={styles.characterEmoji}>🧝‍♂️</Text>
-        </View>
-      </View>
-
-      {/* Quest do dia */}
-      <View style={styles.sectionCard}>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>QUEST DO DIA</Text>
-          <Text style={styles.sectionSmall}>23h restantes</Text>
-        </View>
-
-        <View style={styles.questRow}>
-          <Text style={styles.questIcon}>⚔️</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.questTitle}>Completar 3 tarefas</Text>
-            <View style={styles.questBarBg}>
-              <View style={[styles.questBarFill, { width: "33%" }]} />
-            </View>
-          </View>
-          <Text style={styles.questReward}>+40 XP</Text>
-        </View>
-
-        <View style={styles.questRow}>
-          <Text style={styles.questIcon}>📘</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.questTitle}>Continuar um projeto</Text>
-            <View style={styles.questBarBg}>
-              <View style={[styles.questBarFill, { width: "0%" }]} />
-            </View>
-          </View>
-          <Text style={styles.questReward}>+25 XP</Text>
-        </View>
-
-        <View style={styles.questRow}>
-          <Text style={styles.questIcon}>📝</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.questTitle}>Criar 1 nota nova</Text>
-            <View style={styles.questBarBg}>
-              <View style={[styles.questBarFill, { width: "100%" }]} />
-            </View>
-          </View>
-          <Text style={styles.questReward}>+15 XP</Text>
-        </View>
-
-        <Pressable style={styles.button} onPress={completeQuest}>
-          <Text style={styles.buttonText}>
-            {questDone ? "Quest concluída" : "Concluir quest"}
-          </Text>
-        </Pressable>
-      </View>
-
-      {/* Baú de recompensa */}
-      <View style={styles.sectionCard}>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>RECOMPENSA DO BAÚ</Text>
-          <Text style={styles.sectionSmall}>Alcança {currentLevelXp} XP</Text>
-        </View>
-        <View style={styles.chestRow}>
-          <Text style={styles.chestEmoji}>🧰</Text>
-          <View style={{ flex: 1 }}>
-            <View style={styles.chestProgressBg}>
-              <View
-                style={[
-                  styles.chestProgressFill,
-                  { width: `${progress * 100}%` },
-                ]}
-              />
-            </View>
-            <Text style={styles.chestText}>
-              {xp} / {currentLevelXp} XP
-            </Text>
-          </View>
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  root: { flex: 1, backgroundColor: '#0D0B1A' },
+  hero: {
+    width: SCREEN_W,
+    overflow: 'hidden',
+    backgroundColor: '#1a0a3e',
+  },
+  overlay: {
     flex: 1,
-    backgroundColor: "#050814",
   },
-  content: {
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingBottom: 40,
-    paddingTop: 16,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
+  circleBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  brand: {
-    color: "#fff",
-    fontSize: 24,
-    fontWeight: "900",
-    letterSpacing: 1,
-  },
-  brandSub: {
-    color: "#c4b5fd",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  headerXp: {
-    color: "#ffd66b",
-    fontWeight: "800",
-    fontSize: 14,
-  },
-  infoCard: {
-    backgroundColor: "#0b0f1f",
-    borderRadius: 20,
-    padding: 16,
+  currencyRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    gap: 4,
     borderWidth: 1,
-    borderColor: "#1d2340",
-    marginBottom: 16,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
-  infoTitle: {
-    color: "#c4b5fd",
-    fontSize: 12,
-    fontWeight: "800",
-    marginBottom: 6,
+  pillText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
+  plusBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(139,92,246,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  infoText: {
-    color: "#cbd5e1",
-    fontSize: 13,
-    lineHeight: 18,
-    marginBottom: 12,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#1f2541",
-    marginVertical: 10,
-  },
-  systemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  systemTextBox: {
-    marginLeft: 10,
-  },
-  systemLabel: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  systemSub: {
-    color: "#9ca3af",
-    fontSize: 11,
-  },
-  levelCard: {
-    backgroundColor: "#10152a",
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#23293f",
-    padding: 16,
-    marginBottom: 16,
-  },
-  levelHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  levelLabel: {
-    color: "#cbd5e1",
-    fontSize: 12,
+
+  /* LEVEL abaixo do personagem */
+  levelBlock: {
+    position: 'absolute',
+    bottom: 55,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   levelText: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "900",
-    marginTop: 4,
+    color: '#FFF',
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0,0,0,0.85)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
   },
-  levelStatsBox: {
-    alignItems: "flex-end",
+  classText: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 3,
+    marginTop: 2,
+    marginBottom: 10,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  levelStat: {
-    color: "#9ca3af",
+  xpWrap: { width: 200, marginBottom: 4, alignSelf: 'center' },
+  xpLabel: {
+    color: 'rgba(255,255,255,0.75)',
     fontSize: 11,
+    fontWeight: '600',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
-  xpRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: 12,
+
+  /* Badges laterais absolutos a meio */
+  badgesAbsolute: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    top: '38%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  xpBarBg: {
-    height: 10,
-    backgroundColor: "#1c2640",
-    borderRadius: 999,
-    overflow: "hidden",
-  },
-  xpBarFill: {
-    height: "100%",
-    backgroundColor: "#ffd66b",
-    borderRadius: 999,
-  },
-  xpText: {
-    color: "#cbd5e1",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  characterBox: {
-    marginTop: 16,
-    borderRadius: 18,
-    backgroundColor: "#18203b",
+  badgeCol: { alignItems: 'center' },
+  badge: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderRadius: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
     borderWidth: 1,
-    borderColor: "#2d365b",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 32,
+    borderColor: 'rgba(255,255,255,0.1)',
+    width: 58,
   },
-  characterEmoji: {
-    fontSize: 64,
+  badgeIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 3,
   },
-  sectionCard: {
-    backgroundColor: "#10152a",
+  badgeNum: { color: '#FFF', fontSize: 14, fontWeight: '800' },
+  badgeLbl: { color: 'rgba(255,255,255,0.5)', fontSize: 8, fontWeight: '700' },
+  banner: {
+    width: 40,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(167,139,250,0.3)',
+  },
+
+  sheet: {
+    backgroundColor: '#0D0B1A',
+    marginTop: -20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 16,
+  },
+  card: {
+    marginHorizontal: 16,
+    backgroundColor: '#16142D',
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#23293f",
     padding: 16,
-    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.15)',
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
   },
-  sectionTitle: {
-    color: "#fff",
-    fontWeight: "900",
-    fontSize: 14,
+  cardTitle: {
+    color: '#F5E6C8',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
-  sectionSmall: {
-    color: "#9ca3af",
+  timer: {
+    color: 'rgba(245,230,200,0.4)',
     fontSize: 11,
+    fontWeight: '600',
   },
   questRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 10,
-  },
-  questIcon: {
-    fontSize: 18,
-    width: 24,
-  },
-  questTitle: {
-    color: "#fff",
-    fontWeight: "700",
-    marginBottom: 6,
-  },
-  questBarBg: {
-    height: 8,
-    backgroundColor: "#1c2640",
-    borderRadius: 999,
-    overflow: "hidden",
-  },
-  questBarFill: {
-    height: "100%",
-    backgroundColor: "#7c5cff",
-    borderRadius: 999,
-  },
-  questReward: {
-    color: "#ffd66b",
-    fontWeight: "800",
-    fontSize: 12,
-  },
-  button: {
-    backgroundColor: "#7c5cff",
-    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderRadius: 14,
-    alignItems: "center",
-    marginTop: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
   },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "800",
+  qIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(139,92,246,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(167,139,250,0.2)',
   },
-  chestRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+  qName: {
+    color: '#F5E6C8',
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 4,
   },
-  chestEmoji: {
-    fontSize: 34,
-  },
-  chestProgressBg: {
-    height: 10,
-    backgroundColor: "#1c2640",
-    borderRadius: 999,
-    overflow: "hidden",
-    marginBottom: 8,
-  },
-  chestProgressFill: {
-    height: "100%",
-    backgroundColor: "#ffd66b",
-    borderRadius: 999,
-  },
-  chestText: {
-    color: "#cbd5e1",
+  qProg: {
+    color: 'rgba(245,230,200,0.4)',
     fontSize: 11,
+    fontWeight: '600',
+    minWidth: 28,
+  },
+  chestCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderColor: 'rgba(212,175,55,0.25)',
+    backgroundColor: '#1A1628',
+  },
+  chestBox: {
+    width: 72,
+    height: 72,
+    borderRadius: 16,
+    backgroundColor: 'rgba(212,175,55,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.3)',
   },
 });

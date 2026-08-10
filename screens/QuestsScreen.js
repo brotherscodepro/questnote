@@ -1,213 +1,274 @@
-import * as React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import ProgressBar from '../components/ProgressBar';
+import XPBadge from '../components/XPBadge';
+import { COLORS, SPACING, RADIUS } from '../constants/theme';
+import { QUESTS, QUEST_STATS } from '../constants/data';
 
-const questsData = [
-  {
-    id: "1",
-    title: "Enviar relatório",
-    due: "Hoje",
-    xp: "+25 XP",
-    status: "ALTA",
-    progress: 0.7,
-    color: "#ef4444",
-  },
-  {
-    id: "2",
-    title: "Comprar prenda",
-    due: "Amanhã",
-    xp: "+15 XP",
-    status: "MÉDIA",
-    progress: 0.2,
-    color: "#f59e0b",
-  },
-  {
-    id: "3",
-    title: "Ligar ao dentista",
-    due: "Sexta",
-    xp: "+10 XP",
-    status: "BAIXA",
-    progress: 0.5,
-    color: "#22c55e",
-  },
-  {
-    id: "4",
-    title: "Atualizar CV",
-    due: "Hoje",
-    xp: "+20 XP",
-    status: "BAIXA",
-    progress: 0.0,
-    color: "#22c55e",
-  },
-  {
-    id: "5",
-    title: "Pagar fatura",
-    due: "Hoje",
-    xp: "+20 XP",
-    status: "BAIXA",
-    progress: 0.0,
-    color: "#22c55e",
-  },
-];
+const PRIORITY_COLORS = {
+  ALTA: COLORS.priorityHigh,
+  MÉDIA: COLORS.priorityMedium,
+  BAIXA: COLORS.priorityLow,
+};
 
 export default function QuestsScreen() {
+  const [filter, setFilter] = useState('Todas');
+
+  const activeQuests = QUESTS.filter((q) => !q.completed);
+  const completedQuests = QUESTS.filter((q) => q.completed);
+
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.phoneHeader}>
-        <Text style={styles.phoneHeaderText}>4. TAREFAS (QUESTS)</Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>AS MINHAS QUESTS</Text>
       </View>
 
-      <Text style={styles.pageTitle}>AS MINHAS QUESTS</Text>
-
+      {/* Stats */}
       <View style={styles.statsRow}>
-        <View style={styles.questStatBox}>
-          <Text style={styles.questStatNum}>3</Text>
-          <Text style={styles.questStatLabel}>PENDENTES</Text>
+        <View style={[styles.statCard, { borderColor: COLORS.warning + '50' }]}>
+          <View style={[styles.statIcon, { backgroundColor: COLORS.warning + '20' }]}>
+            <Ionicons name="time" size={18} color={COLORS.warning} />
+          </View>
+          <Text style={styles.statNumber}>{QUEST_STATS.pending}</Text>
+          <Text style={styles.statLabel}>PENDENTES</Text>
         </View>
-        <View style={styles.questStatBox}>
-          <Text style={styles.questStatNum}>1</Text>
-          <Text style={styles.questStatLabel}>ATRASADA</Text>
+        <View style={[styles.statCard, { borderColor: COLORS.danger + '50' }]}>
+          <View style={[styles.statIcon, { backgroundColor: COLORS.danger + '20' }]}>
+            <Ionicons name="alert-circle" size={18} color={COLORS.danger} />
+          </View>
+          <Text style={styles.statNumber}>{QUEST_STATS.overdue}</Text>
+          <Text style={styles.statLabel}>ATRASADA</Text>
         </View>
-        <View style={styles.questStatBox}>
-          <Text style={styles.questStatNum}>5</Text>
-          <Text style={styles.questStatLabel}>CONCLUÍDAS</Text>
+        <View style={[styles.statCard, { borderColor: COLORS.success + '50' }]}>
+          <View style={[styles.statIcon, { backgroundColor: COLORS.success + '20' }]}>
+            <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
+          </View>
+          <Text style={styles.statNumber}>{QUEST_STATS.completed}</Text>
+          <Text style={styles.statLabel}>CONCLUÍDAS</Text>
         </View>
       </View>
 
-      <Text style={styles.orderText}>Ordenar: Prioridade</Text>
+      {/* Filter */}
+      <View style={styles.filterRow}>
+        <Text style={styles.filterLabel}>Ordenar: Prioridade</Text>
+        <TouchableOpacity>
+          <Text style={styles.filterValue}>Todas ▾</Text>
+        </TouchableOpacity>
+      </View>
 
-      {questsData.map((item) => (
-        <View key={item.id} style={styles.questCard}>
-          <View style={styles.questCardTop}>
-            <Text style={styles.questCardTitle}>{item.title}</Text>
-            <View style={[styles.priorityBadge, { borderColor: item.color }]}>
-              <Text
-                style={[styles.priorityBadgeText, { color: item.color }]}
-              >
-                {item.status}
-              </Text>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+      >
+        {/* Active Quests */}
+        {activeQuests.map((quest) => (
+          <TouchableOpacity
+            key={quest.id}
+            style={styles.questCard}
+            activeOpacity={0.7}
+          >
+            <View style={styles.questTop}>
+              <View style={styles.questLeft}>
+                {quest.priority && (
+                  <View
+                    style={[
+                      styles.priorityBadge,
+                      { backgroundColor: PRIORITY_COLORS[quest.priority] + '25' },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.priorityText,
+                        { color: PRIORITY_COLORS[quest.priority] },
+                      ]}
+                    >
+                      {quest.priority}
+                    </Text>
+                  </View>
+                )}
+                <Text style={styles.questTitle}>{quest.title}</Text>
+                {quest.due && (
+                  <Text style={styles.questDue}>{quest.due}</Text>
+                )}
+              </View>
+              <XPBadge xp={quest.xp} />
             </View>
-          </View>
-          <Text style={styles.questCardDue}>{item.due}</Text>
-          <View style={styles.questCardBarBg}>
-            <View
-              style={[
-                styles.questCardBarFill,
-                {
-                  width: `${item.progress * 100}%`,
-                  backgroundColor: item.color,
-                },
-              ]}
-            />
-          </View>
-          <Text style={styles.questCardXp}>{item.xp}</Text>
-        </View>
-      ))}
-    </ScrollView>
+            {quest.progress > 0 && (
+              <View style={styles.progressRow}>
+                <ProgressBar progress={quest.progress} height={4} />
+                <Text style={styles.progressText}>{quest.progress}%</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        ))}
+
+        {/* Completed */}
+        {completedQuests.length > 0 && (
+          <>
+            <Text style={styles.completedLabel}>Concluídas</Text>
+            {completedQuests.map((quest) => (
+              <View key={quest.id} style={[styles.questCard, styles.questCompleted]}>
+                <View style={styles.questTop}>
+                  <View style={styles.questLeft}>
+                    <View style={styles.checkIcon}>
+                      <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
+                    </View>
+                    <Text style={[styles.questTitle, styles.questTitleDone]}>
+                      {quest.title}
+                    </Text>
+                  </View>
+                  <XPBadge xp={quest.xp} />
+                </View>
+              </View>
+            ))}
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
-    backgroundColor: "#050814",
+    backgroundColor: COLORS.background,
   },
-  content: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    paddingTop: 16,
+  header: {
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.sm,
+    paddingBottom: SPACING.md,
   },
-  phoneHeader: {
-    paddingBottom: 8,
-  },
-  phoneHeaderText: {
-    color: "#8e8f9e",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 1.2,
-  },
-  pageTitle: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "900",
-    marginBottom: 12,
+  headerTitle: {
+    color: COLORS.text,
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   statsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 12,
+    flexDirection: 'row',
+    paddingHorizontal: SPACING.lg,
+    gap: SPACING.sm,
+    marginBottom: SPACING.lg,
   },
-  questStatBox: {
+  statCard: {
     flex: 1,
-    backgroundColor: "#10152a",
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: "center",
+    backgroundColor: COLORS.backgroundCard,
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: "#23293f",
   },
-  questStatNum: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "900",
+  statIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
   },
-  questStatLabel: {
-    color: "#9ca3af",
-    fontSize: 10,
-    marginTop: 4,
-    fontWeight: "700",
+  statNumber: {
+    color: COLORS.text,
+    fontSize: 20,
+    fontWeight: '800',
   },
-  orderText: {
-    color: "#cbd5e1",
-    marginBottom: 10,
+  statLabel: {
+    color: COLORS.textMuted,
+    fontSize: 9,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+  },
+  filterLabel: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+  },
+  filterValue: {
+    color: COLORS.primaryLight,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  scroll: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: 40,
   },
   questCard: {
-    marginBottom: 10,
-    backgroundColor: "#10152a",
-    borderRadius: 18,
+    backgroundColor: COLORS.backgroundCard,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.sm,
     borderWidth: 1,
-    borderColor: "#23293f",
-    padding: 14,
+    borderColor: COLORS.border,
   },
-  questCardTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  questCompleted: {
+    opacity: 0.6,
   },
-  questCardTitle: {
-    color: "#fff",
-    fontWeight: "800",
-    fontSize: 15,
+  questTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  questLeft: {
+    flex: 1,
+    gap: 4,
   },
   priorityBadge: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: RADIUS.sm,
+    marginBottom: 4,
   },
-  priorityBadgeText: {
-    fontWeight: "800",
+  priorityText: {
     fontSize: 10,
+    fontWeight: '800',
   },
-  questCardDue: {
-    color: "#9ca3af",
-    marginTop: 4,
-    marginBottom: 10,
+  questTitle: {
+    color: COLORS.text,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  questTitleDone: {
+    textDecorationLine: 'line-through',
+    color: COLORS.textMuted,
+  },
+  questDue: {
+    color: COLORS.textMuted,
     fontSize: 12,
   },
-  questCardBarBg: {
-    height: 8,
-    backgroundColor: "#1c2640",
-    borderRadius: 999,
-    overflow: "hidden",
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    marginTop: SPACING.md,
   },
-  questCardBarFill: {
-    height: "100%",
-    borderRadius: 999,
+  progressText: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
+    minWidth: 30,
   },
-  questCardXp: {
-    color: "#ffd66b",
-    marginTop: 10,
-    fontWeight: "800",
+  completedLabel: {
+    color: COLORS.textMuted,
     fontSize: 12,
+    fontWeight: '700',
+    marginTop: SPACING.md,
+    marginBottom: SPACING.sm,
+  },
+  checkIcon: {
+    marginBottom: 2,
   },
 });

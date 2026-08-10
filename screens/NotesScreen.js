@@ -1,235 +1,279 @@
-import * as React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-
-const notesData = [
-  {
-    id: "1",
-    tag: "Ideia",
-    title: "Sistema de Gamificação",
-    time: "Hoje · 14:32",
-    xp: "+5 XP",
-    color: "#7c5cff",
-  },
-  {
-    id: "2",
-    tag: "Projeto",
-    title: "Wireframes Mobile",
-    time: "Hoje · 11:08",
-    xp: "+5 XP",
-    color: "#3b82f6",
-  },
-  {
-    id: "3",
-    tag: "Pessoal",
-    title: "Hábitos Diários",
-    time: "Ontem · 21:15",
-    xp: "+5 XP",
-    color: "#22c55e",
-  },
-  {
-    id: "4",
-    tag: "Estudo",
-    title: "Design Patterns",
-    time: "2 dias · 14:40",
-    xp: "+5 XP",
-    color: "#f59e0b",
-  },
-];
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  FlatList,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import XPBadge from '../components/XPBadge';
+import { COLORS, SPACING, RADIUS } from '../constants/theme';
+import { NOTES, NOTE_CATEGORIES } from '../constants/data';
 
 export default function NotesScreen() {
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [search, setSearch] = useState('');
+
+  const filteredNotes = NOTES.filter((note) => {
+    const matchCategory =
+      activeCategory === 'all' ||
+      note.category.toLowerCase() === activeCategory;
+    const matchSearch =
+      note.title.toLowerCase().includes(search.toLowerCase());
+    return matchCategory && matchSearch;
+  });
+
+  const renderNote = ({ item }) => (
+    <TouchableOpacity style={styles.noteCard} activeOpacity={0.7}>
+      <View style={[styles.noteIcon, { backgroundColor: item.color + '25' }]}>
+        <Text style={styles.noteEmoji}>{item.icon}</Text>
+      </View>
+      <View style={styles.noteInfo}>
+        <View style={styles.noteHeader}>
+          <Text style={[styles.noteCategory, { color: item.color }]}>
+            {item.category}
+          </Text>
+          <XPBadge xp={item.xp} />
+        </View>
+        <Text style={styles.noteTitle} numberOfLines={1}>
+          {item.title}
+        </Text>
+        <Text style={styles.noteDate}>{item.date}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.phoneHeader}>
-        <Text style={styles.phoneHeaderText}>2. NOTAS (COLEÇÃO)</Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>AS MINHAS NOTAS</Text>
       </View>
 
-      <Text style={styles.pageTitle}>AS MINHAS NOTAS</Text>
-
-      <View style={styles.searchBar}>
-        <Ionicons name="search" size={16} color="#9ca3af" />
-        <Text style={styles.searchText}>Pesquisar notas...</Text>
-        <Ionicons name="options" size={16} color="#9ca3af" />
+      {/* Search */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={18} color={COLORS.textMuted} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Pesquisar notas..."
+          placeholderTextColor={COLORS.textMuted}
+          value={search}
+          onChangeText={setSearch}
+        />
       </View>
 
-      <View style={styles.filterRow}>
-        {["Todas", "Ideias", "Projeto", "Pessoal", "Estudo"].map((item, idx) => (
-          <View
-            key={item}
-            style={[styles.filterChip, idx === 0 && styles.filterChipActive]}
+      {/* Categories */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categories}
+        contentContainerStyle={styles.categoriesContent}
+      >
+        {NOTE_CATEGORIES.map((cat) => (
+          <TouchableOpacity
+            key={cat.id}
+            style={[
+              styles.categoryChip,
+              activeCategory === cat.id && styles.categoryChipActive,
+            ]}
+            onPress={() => setActiveCategory(cat.id)}
           >
             <Text
               style={[
-                styles.filterChipText,
-                idx === 0 && styles.filterChipTextActive,
+                styles.categoryText,
+                activeCategory === cat.id && styles.categoryTextActive,
               ]}
             >
-              {item}
+              {cat.label}
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
+      </ScrollView>
+
+      {/* Count */}
+      <View style={styles.countRow}>
+        <Text style={styles.countText}>{filteredNotes.length} notas encontradas</Text>
+        <Text style={styles.sortText}>Mais recentes</Text>
       </View>
 
-      <View style={styles.notesGrid}>
-        {notesData.map((item) => (
-          <View
-            key={item.id}
-            style={[styles.noteCard, { borderColor: item.color }]}
-          >
-            <View style={styles.noteCardTop}>
-              <View style={[styles.noteTag, { backgroundColor: item.color }]}>
-                <Text style={styles.noteTagText}>{item.tag}</Text>
-              </View>
-              <Ionicons name="bookmark-outline" size={16} color="#fff" />
+      {/* Notes Grid */}
+      <FlatList
+        data={filteredNotes}
+        renderItem={renderNote}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2}
+        columnWrapperStyle={styles.row}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+        ListFooterComponent={
+          <TouchableOpacity style={styles.addCard} activeOpacity={0.7}>
+            <View style={styles.addIcon}>
+              <Ionicons name="add" size={28} color={COLORS.primary} />
             </View>
-            <Text style={styles.noteTitle}>{item.title}</Text>
-            <Text style={styles.noteTime}>{item.time}</Text>
-            <Text style={styles.noteXp}>{item.xp}</Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.centerPlus}>
-        <View style={styles.plusButton}>
-          <Text style={styles.plusText}>+</Text>
-        </View>
-      </View>
-    </ScrollView>
+            <Text style={styles.addText}>Nova nota</Text>
+          </TouchableOpacity>
+        }
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
-    backgroundColor: "#050814",
+    backgroundColor: COLORS.background,
   },
-  content: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    paddingTop: 16,
+  header: {
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.sm,
+    paddingBottom: SPACING.md,
   },
-  phoneHeader: {
-    paddingBottom: 8,
+  headerTitle: {
+    color: COLORS.text,
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
-  phoneHeaderText: {
-    color: "#8e8f9e",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 1.2,
-  },
-  pageTitle: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "900",
-    marginBottom: 12,
-  },
-  searchBar: {
-    backgroundColor: "#10152a",
-    borderRadius: 14,
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.backgroundCard,
+    marginHorizontal: SPACING.lg,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: "#22283f",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
+    borderColor: COLORS.border,
+    gap: SPACING.sm,
+    height: 44,
   },
-  searchText: {
-    color: "#9ca3af",
+  searchInput: {
     flex: 1,
-    marginLeft: 10,
-    marginRight: 10,
+    color: COLORS.text,
+    fontSize: 14,
+  },
+  categories: {
+    marginTop: SPACING.md,
+    maxHeight: 40,
+  },
+  categoriesContent: {
+    paddingHorizontal: SPACING.lg,
+    gap: SPACING.sm,
+  },
+  categoryChip: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.backgroundCard,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  categoryChipActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  categoryText: {
+    color: COLORS.textSecondary,
     fontSize: 13,
+    fontWeight: '600',
   },
-  filterRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 12,
-    flexWrap: "wrap",
+  categoryTextActive: {
+    color: '#FFF',
   },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: "#10152a",
-    borderWidth: 1,
-    borderColor: "#23293f",
+  countRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
+    marginBottom: SPACING.sm,
   },
-  filterChipActive: {
-    backgroundColor: "#3a2f7a",
-    borderColor: "#7c5cff",
-  },
-  filterChipText: {
-    color: "#cbd5e1",
+  countText: {
+    color: COLORS.textMuted,
     fontSize: 12,
-    fontWeight: "700",
   },
-  filterChipTextActive: {
-    color: "#fff",
+  sortText: {
+    color: COLORS.primaryLight,
+    fontSize: 12,
+    fontWeight: '600',
   },
-  notesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
+  list: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: 40,
+  },
+  row: {
+    gap: SPACING.md,
   },
   noteCard: {
-    width: "48%",
-    minHeight: 160,
-    backgroundColor: "#10152a",
-    borderRadius: 18,
+    flex: 1,
+    backgroundColor: COLORS.backgroundCard,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
     borderWidth: 1,
-    padding: 12,
+    borderColor: COLORS.border,
   },
-  noteCardTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 14,
+  noteIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.sm,
   },
-  noteTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 999,
+  noteEmoji: {
+    fontSize: 22,
   },
-  noteTagText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "800",
+  noteInfo: {
+    flex: 1,
+  },
+  noteHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  noteCategory: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   noteTitle: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "800",
-    marginBottom: 6,
+    color: COLORS.text,
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 4,
   },
-  noteTime: {
-    color: "#9ca3af",
-    fontSize: 12,
-    marginBottom: 18,
+  noteDate: {
+    color: COLORS.textMuted,
+    fontSize: 11,
   },
-  noteXp: {
-    color: "#ffd66b",
-    fontSize: 12,
-    fontWeight: "800",
-    marginTop: "auto",
+  addCard: {
+    flex: 1,
+    backgroundColor: COLORS.backgroundCard,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.xl,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 140,
   },
-  centerPlus: {
-    alignItems: "center",
-    marginTop: 16,
+  addIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.sm,
   },
-  plusButton: {
-    width: 54,
-    height: 54,
-    borderRadius: 999,
-    backgroundColor: "#7c5cff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  plusText: {
-    color: "#fff",
-    fontSize: 30,
-    fontWeight: "300",
-    marginTop: -3,
+  addText: {
+    color: COLORS.primaryLight,
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
