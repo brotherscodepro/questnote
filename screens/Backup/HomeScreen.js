@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -31,6 +32,18 @@ const VIDEOS = {
   heroi: require('../assets/characters/heroi.mp4'),
   arquimago: require('../assets/characters/arquimago.mp4'),
 };
+
+const UI = {
+  chest: require('../assets/ui/chest.png'),
+  swords: require('../assets/ui/icon-swords.png'),
+  scroll: require('../assets/ui/icon-scroll.png'),
+  note: require('../assets/ui/icon-note.png'),
+  compass: require('../assets/ui/compass.png'),
+  flame: require('../assets/ui/icon-flame.png'),
+  star: require('../assets/ui/icon-star.png'),
+};
+
+const QUEST_ICONS = [UI.swords, UI.scroll, UI.note];
 
 export default function HomeScreen() {
   const character = getCharacter(USER.level);
@@ -109,18 +122,14 @@ export default function HomeScreen() {
             <View style={styles.badgesAbsolute}>
               <View style={styles.badgeCol}>
                 <View style={styles.badge}>
-                  <View style={[styles.badgeIcon, { backgroundColor: 'rgba(239,68,68,0.3)' }]}>
-                    <Ionicons name="flame" size={16} color="#EF4444" />
-                  </View>
+                  <Image source={UI.flame} style={styles.badgeImg} resizeMode="contain" />
                   <Text style={styles.badgeNum}>{USER.streak}</Text>
                   <Text style={styles.badgeLbl}>DIAS</Text>
                 </View>
                 <View style={[styles.badge, { marginTop: 10 }]}>
-                  <View style={[styles.badgeIcon, { backgroundColor: 'rgba(245,158,11,0.3)' }]}>
-                    <Ionicons name="star" size={14} color="#F59E0B" />
-                  </View>
+                  <Image source={UI.star} style={styles.badgeImg} resizeMode="contain" />
                   <Text style={styles.badgeNum}>{USER.multiplier}x</Text>
-                  <Text style={styles.badgeLbl}>MULTI</Text>
+                  <Text style={styles.badgeLbl}>MULTIPLICADOR</Text>
                 </View>
               </View>
               <View style={styles.badgeCol}>
@@ -139,8 +148,8 @@ export default function HomeScreen() {
         <View style={styles.sheet}>
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="compass" size={15} color="#F59E0B" />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Image source={UI.compass} style={{ width: 20, height: 20 }} resizeMode="contain" />
                 <Text style={styles.cardTitle}>QUEST DO DIA</Text>
               </View>
               <Text style={styles.timer}>23h 18m restantes</Text>
@@ -151,16 +160,8 @@ export default function HomeScreen() {
               const pct = (q.progress / q.total) * 100;
               return (
                 <View key={q.id} style={styles.questRow}>
-                  <View style={[styles.qIcon, done && { backgroundColor: '#22C55E' }]}>
-                    {done ? (
-                      <Ionicons name="checkmark" size={15} color="#FFF" />
-                    ) : i === 0 ? (
-                      <MaterialCommunityIcons name="sword-cross" size={15} color="#A78BFA" />
-                    ) : i === 1 ? (
-                      <Ionicons name="document-text" size={15} color="#A78BFA" />
-                    ) : (
-                      <Ionicons name="create" size={15} color="#A78BFA" />
-                    )}
+                  <View style={styles.qIcon}>
+                    <Image source={QUEST_ICONS[i]} style={{ width: 24, height: 24 }} resizeMode="contain" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.qName, done && { color: 'rgba(255,255,255,0.4)' }]}>
@@ -184,33 +185,33 @@ export default function HomeScreen() {
                       <Ionicons name="checkmark-circle" size={15} color="#22C55E" />
                     </View>
                   ) : (
-                    <Text style={{ color: '#A78BFA', fontSize: 12, fontWeight: '700' }}>+{q.xp} XP</Text>
+                    <Text style={{ color: '#D4AF37', fontSize: 12, fontWeight: '700' }}>+{q.xp} XP</Text>
                   )}
                 </View>
               );
             })}
           </View>
 
-          <View style={[styles.card, { flexDirection: 'row', alignItems: 'center', gap: 12 }]}>
+          <View style={[styles.card, styles.chestCard]}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: '#F59E0B', fontSize: 11, fontWeight: '800', letterSpacing: 0.5, marginBottom: 3 }}>
+              <Text style={{ color: '#D4AF37', fontSize: 12, fontWeight: '800', letterSpacing: 0.8, marginBottom: 4 }}>
                 RECOMPENSA DO BAÚ
               </Text>
-              <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '600', marginBottom: 8 }}>
+              <Text style={{ color: '#F5E6C8', fontSize: 13, fontWeight: '600', marginBottom: 10 }}>
                 Alcança 2.000 XP
               </Text>
               <ProgressBar
                 progress={(USER.xp / USER.xpMax) * 100}
-                height={7}
-                color="#F59E0B"
-                bgColor="rgba(255,255,255,0.08)"
+                height={8}
+                color="#D4AF37"
+                bgColor="rgba(212,175,55,0.12)"
               />
-              <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: '600', marginTop: 4 }}>
+              <Text style={{ color: 'rgba(212,175,55,0.6)', fontSize: 11, fontWeight: '600', marginTop: 5 }}>
                 {USER.xp.toLocaleString('pt-PT')} / {USER.xpMax.toLocaleString('pt-PT')}
               </Text>
             </View>
             <View style={styles.chestBox}>
-              <Text style={{ fontSize: 34 }}>🧰</Text>
+              <Image source={UI.chest} style={{ width: 64, height: 64 }} resizeMode="contain" />
             </View>
           </View>
         </View>
@@ -268,7 +269,7 @@ const styles = StyleSheet.create({
   /* LEVEL abaixo do personagem */
   levelBlock: {
     position: 'absolute',
-    bottom: 70,
+    bottom: 55,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -315,24 +316,35 @@ const styles = StyleSheet.create({
   badgeCol: { alignItems: 'center' },
   badge: {
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    borderRadius: 14,
-    paddingVertical: 8,
-    paddingHorizontal: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    width: 58,
+    backgroundColor: 'rgba(10,8,24,0.75)',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(212,175,55,0.45)',
+    width: 64,
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
   },
-  badgeIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 3,
+  badgeImg: {
+    width: 22,
+    height: 22,
+    marginBottom: 4,
   },
-  badgeNum: { color: '#FFF', fontSize: 14, fontWeight: '800' },
-  badgeLbl: { color: 'rgba(255,255,255,0.5)', fontSize: 8, fontWeight: '700' },
+  badgeNum: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  badgeLbl: {
+    color: 'rgba(245,230,200,0.55)',
+    fontSize: 7,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    marginTop: 1,
+  },
   banner: {
     width: 40,
     height: 48,
@@ -349,45 +361,87 @@ const styles = StyleSheet.create({
     marginTop: -20,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingTop: 20,
+    paddingTop: 16,
   },
   card: {
     marginHorizontal: 16,
-    backgroundColor: 'rgba(22,20,45,0.95)',
-    borderRadius: 18,
-    padding: 14,
+    backgroundColor: '#16142D',
+    borderRadius: 20,
+    padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
-    marginBottom: 12,
+    borderColor: 'rgba(212,175,55,0.15)',
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
-  cardTitle: { color: '#FFF', fontSize: 12, fontWeight: '800', letterSpacing: 0.7 },
-  timer: { color: 'rgba(255,255,255,0.35)', fontSize: 11 },
-  questRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  cardTitle: {
+    color: '#F5E6C8',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  timer: {
+    color: 'rgba(245,230,200,0.4)',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  questRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+  },
   qIcon: {
-    width: 34,
-    height: 34,
+    width: 36,
+    height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(139,92,246,0.15)',
+    backgroundColor: 'rgba(139,92,246,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(167,139,250,0.2)',
   },
-  qName: { color: '#FFF', fontSize: 13, fontWeight: '600', marginBottom: 3 },
-  qProg: { color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: '600', minWidth: 24 },
+  qName: {
+    color: '#F5E6C8',
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  qProg: {
+    color: 'rgba(245,230,200,0.4)',
+    fontSize: 11,
+    fontWeight: '600',
+    minWidth: 28,
+  },
+  chestCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderColor: 'rgba(212,175,55,0.25)',
+    backgroundColor: '#1A1628',
+  },
   chestBox: {
-    width: 58,
-    height: 58,
-    borderRadius: 14,
-    backgroundColor: 'rgba(245,158,11,0.1)',
+    width: 72,
+    height: 72,
+    borderRadius: 16,
+    backgroundColor: 'rgba(212,175,55,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(245,158,11,0.2)',
+    borderColor: 'rgba(212,175,55,0.3)',
   },
 });

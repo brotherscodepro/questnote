@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -31,6 +32,19 @@ const VIDEOS = {
   heroi: require('../assets/characters/heroi.mp4'),
   arquimago: require('../assets/characters/arquimago.mp4'),
 };
+
+const UI = {
+  chest: require('../assets/ui/chest.png'),
+  swords: require('../assets/ui/icon-swords.png'),
+  scroll: require('../assets/ui/icon-scroll.png'),
+  note: require('../assets/ui/icon-note.png'),
+  compass: require('../assets/ui/compass.png'),
+  flame: require('../assets/ui/icon-flame.png'),
+  star: require('../assets/ui/icon-star.png'),
+  badgeFrame: require('../assets/ui/badge-frame.png'),
+};
+
+const QUEST_ICONS = [UI.swords, UI.scroll, UI.note];
 
 export default function HomeScreen() {
   const character = getCharacter(USER.level);
@@ -109,18 +123,20 @@ export default function HomeScreen() {
             <View style={styles.badgesAbsolute}>
               <View style={styles.badgeCol}>
                 <View style={styles.badge}>
-                  <View style={[styles.badgeIcon, { backgroundColor: 'rgba(239,68,68,0.3)' }]}>
-                    <Ionicons name="flame" size={16} color="#EF4444" />
+                  <Image source={UI.badgeFrame} style={styles.badgeFrame} resizeMode="stretch" />
+                  <View style={styles.badgeContent}>
+                    <Image source={UI.flame} style={styles.badgeFlame} resizeMode="contain" />
+                    <Text style={styles.badgeNum}>{USER.streak}</Text>
+                    <Text style={styles.badgeLbl} numberOfLines={1}>DIAS</Text>
                   </View>
-                  <Text style={styles.badgeNum}>{USER.streak}</Text>
-                  <Text style={styles.badgeLbl}>DIAS</Text>
                 </View>
                 <View style={[styles.badge, { marginTop: 10 }]}>
-                  <View style={[styles.badgeIcon, { backgroundColor: 'rgba(245,158,11,0.3)' }]}>
-                    <Ionicons name="star" size={14} color="#F59E0B" />
+                  <Image source={UI.badgeFrame} style={styles.badgeFrame} resizeMode="stretch" />
+                  <View style={styles.badgeContent}>
+                    <Image source={UI.star} style={styles.badgeStar} resizeMode="contain" />
+                    <Text style={styles.badgeNum}>{USER.multiplier}x</Text>
+                    <Text style={styles.badgeLbl} numberOfLines={1}>MULTIPLICADOR</Text>
                   </View>
-                  <Text style={styles.badgeNum}>{USER.multiplier}x</Text>
-                  <Text style={styles.badgeLbl}>MULTI</Text>
                 </View>
               </View>
               <View style={styles.badgeCol}>
@@ -139,8 +155,8 @@ export default function HomeScreen() {
         <View style={styles.sheet}>
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="compass" size={16} color="#D4AF37" />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Image source={UI.compass} style={{ width: 20, height: 20 }} resizeMode="contain" />
                 <Text style={styles.cardTitle}>QUEST DO DIA</Text>
               </View>
               <Text style={styles.timer}>23h 18m restantes</Text>
@@ -151,16 +167,8 @@ export default function HomeScreen() {
               const pct = (q.progress / q.total) * 100;
               return (
                 <View key={q.id} style={styles.questRow}>
-                  <View style={[styles.qIcon, done && { backgroundColor: '#22C55E' }]}>
-                    {done ? (
-                      <Ionicons name="checkmark" size={15} color="#FFF" />
-                    ) : i === 0 ? (
-                      <MaterialCommunityIcons name="sword-cross" size={15} color="#A78BFA" />
-                    ) : i === 1 ? (
-                      <Ionicons name="document-text" size={15} color="#A78BFA" />
-                    ) : (
-                      <Ionicons name="create" size={15} color="#A78BFA" />
-                    )}
+                  <View style={styles.qIcon}>
+                    <Image source={QUEST_ICONS[i]} style={{ width: 24, height: 24 }} resizeMode="contain" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.qName, done && { color: 'rgba(255,255,255,0.4)' }]}>
@@ -210,7 +218,7 @@ export default function HomeScreen() {
               </Text>
             </View>
             <View style={styles.chestBox}>
-              <MaterialCommunityIcons name="treasure-chest" size={40} color="#D4AF37" />
+              <Image source={UI.chest} style={{ width: 64, height: 64 }} resizeMode="contain" />
             </View>
           </View>
         </View>
@@ -314,25 +322,52 @@ const styles = StyleSheet.create({
   },
   badgeCol: { alignItems: 'center' },
   badge: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    borderRadius: 14,
-    paddingVertical: 8,
-    paddingHorizontal: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    width: 58,
-  },
-  badgeIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 86,
+    height: 100,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'visible',
+  },
+  badgeFrame: {
+    position: 'absolute',
+    width: 86,
+    height: 100,
+    top: 0,
+    left: 0,
+  },
+  badgeContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 16,
+    paddingBottom: 14,
+    paddingHorizontal: 6,
+    zIndex: 2,
+  },
+  badgeFlame: {
+    width: 28,
+    height: 28,
+    marginBottom: 1,
+  },
+  badgeStar: {
+    width: 22,
+    height: 22,
     marginBottom: 3,
   },
-  badgeNum: { color: '#FFF', fontSize: 14, fontWeight: '800' },
-  badgeLbl: { color: 'rgba(255,255,255,0.5)', fontSize: 8, fontWeight: '700' },
+  badgeNum: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '900',
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  badgeLbl: {
+    color: 'rgba(245,230,200,0.75)',
+    fontSize: 7,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+    marginTop: 2,
+  },
   banner: {
     width: 40,
     height: 48,
