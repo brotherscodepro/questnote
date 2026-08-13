@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "QuestNote",
+    "slug": "questnote",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D0B1A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.questnote.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0D0B1A"
+      },
+      "package": "com.questnote.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font"
+    ]
+  }
+}
