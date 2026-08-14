@@ -5,38 +5,26 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ImageBackground,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import ProgressBar from '../components/ProgressBar';
 import { MISSIONS } from '../constants/data';
 
-const { width: SCREEN_W } = Dimensions.get('window');
-const CARD_W = SCREEN_W - 32;
-const CARD_H = CARD_W * 0.34;
-
 const TABS = ['Ativas', 'Completas', 'Recorrentes'];
 
-const CARD_BG = {
-  1: require('../assets/ui/mission-card-green.png'),
-  2: require('../assets/ui/mission-card-purple.png'),
-  3: require('../assets/ui/mission-card-orange.png'),
-};
-
 const ICONS = {
-  1: { type: 'ion', name: 'cart-outline' },
-  2: { type: 'ion', name: 'document-text-outline' },
-  3: { type: 'mci', name: 'tent' },
+  1: { lib: 'ion', name: 'cart-outline' },
+  2: { lib: 'ion', name: 'document-text-outline' },
+  3: { lib: 'mci', name: 'tent' },
 };
 
 function MissionIcon({ id, color }) {
   const conf = ICONS[id] || ICONS[1];
-  if (conf.type === 'mci') {
-    return <MaterialCommunityIcons name={conf.name} size={24} color={color} />;
+  if (conf.lib === 'mci') {
+    return <MaterialCommunityIcons name={conf.name} size={26} color={color} />;
   }
-  return <Ionicons name={conf.name} size={24} color={color} />;
+  return <Ionicons name={conf.name} size={26} color={color} />;
 }
 
 export default function MissionsScreen() {
@@ -77,54 +65,61 @@ export default function MissionsScreen() {
       >
         {MISSIONS.map((mission) => {
           const progress = (mission.progress / mission.total) * 100;
-          const bg = CARD_BG[mission.id] || CARD_BG[1];
-
           return (
-            <TouchableOpacity key={mission.id} activeOpacity={0.9} style={styles.cardWrap}>
-              <ImageBackground
-                source={bg}
-                style={styles.card}
-                imageStyle={styles.cardImg}
-                resizeMode="stretch"
-              >
-                {/* icon in left slot */}
-                <View style={styles.iconSlot}>
-                  <MissionIcon id={mission.id} color={mission.color} />
+            <TouchableOpacity
+              key={mission.id}
+              activeOpacity={0.85}
+              style={[styles.card, { borderColor: mission.color + '99' }]}
+            >
+              {/* soft color wash */}
+              <View
+                pointerEvents="none"
+                style={[styles.wash, { backgroundColor: mission.color + '14' }]}
+              />
+
+              {/* ribbon star */}
+              <View style={styles.ribbon}>
+                <View style={styles.ribbonBody}>
+                  <Ionicons name="star" size={11} color="#F5E6A0" />
+                </View>
+                <View style={styles.ribbonPoint} />
+              </View>
+
+              <View style={styles.cardBody}>
+                <View style={styles.topRow}>
+                  <View style={[styles.iconWrap, { borderColor: mission.color + '55' }]}>
+                    <MissionIcon id={mission.id} color={mission.color} />
+                  </View>
+                  <View style={styles.titles}>
+                    <Text style={styles.title}>{mission.title}</Text>
+                    <Text style={styles.subtitle}>
+                      {mission.progress} / {mission.total} itens
+                    </Text>
+                  </View>
                 </View>
 
-                {/* title block */}
-                <View style={styles.textBlock}>
-                  <Text style={styles.title}>{mission.title}</Text>
-                  <Text style={styles.subtitle}>
-                    {mission.progress} / {mission.total} itens
-                  </Text>
-                </View>
-
-                {/* progress over the bottom track */}
-                <View style={styles.barArea}>
+                <View style={styles.barWrap}>
                   <ProgressBar
                     progress={progress}
                     height={5}
                     color={mission.color}
-                    bgColor="transparent"
+                    bgColor="rgba(255,255,255,0.08)"
                   />
                 </View>
 
-                {/* rewards */}
-                
-                 <View style={styles.rewardRow}>
-  <Text style={[styles.rewardLabel, { flex: 1 }]}>RECOMPENSA</Text>
-
-  <Text style={[styles.xp, { color: mission.color, flex: 1, textAlign: 'center', marginLeft: -70 }]}>
-    +{mission.xp} XP
-  </Text>
-
-  <View style={[styles.coins, { flex: 1, justifyContent: 'flex-end' }]}>
-    <Text style={styles.coinEmoji}>🪙</Text>
-    <Text style={styles.coinNum}>{mission.coins}</Text>
-  </View>
-</View>
-              </ImageBackground>
+                <View style={styles.rewardRow}>
+                  <Text style={styles.rewardLabel}>RECOMPENSA</Text>
+                  <View style={styles.rewardValues}>
+                    <Text style={[styles.xp, { color: mission.color }]}>
+                      +{mission.xp} XP
+                    </Text>
+                    <View style={styles.coins}>
+                      <Text style={styles.coinEmoji}>🪙</Text>
+                      <Text style={styles.coinNum}>{mission.coins}</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -183,96 +178,110 @@ const styles = StyleSheet.create({
   },
   tabTextActive: { color: '#FFF' },
 
-  scroll: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-  },
+  scroll: { paddingHorizontal: 16, paddingBottom: 40 },
 
-  cardWrap: {
-    marginBottom: 14,
-    borderRadius: 18,
-    overflow: 'hidden',
-  },
   card: {
-    width: CARD_W,
-    height: CARD_H,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    marginBottom: 14,
+    backgroundColor: '#0E0C1A',
+    overflow: 'hidden',
+    position: 'relative',
   },
-  cardImg: {
-    borderRadius: 14,
+  wash: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  cardBody: {
+    padding: 16,
+    paddingTop: 18,
   },
 
-  iconSlot: {
+  ribbon: {
     position: 'absolute',
-    left: 25,
-    top: 25,
-    width: 48,
-    height: 48,
+    top: 0,
+    right: 16,
+    zIndex: 4,
+    alignItems: 'center',
+  },
+  ribbonBody: {
+    backgroundColor: '#5B4B9A',
+    width: 24,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    borderBottomLeftRadius: 2,
+    borderBottomRightRadius: 2,
+  },
+  ribbonPoint: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 12,
+    borderRightWidth: 12,
+    borderTopWidth: 7,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#5B4B9A',
   },
 
-  textBlock: {
-    position: 'absolute',
-    left: 95,
-    top: 25,
-    right: 44,
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
   },
+  iconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 1,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  titles: { flex: 1, paddingRight: 28 },
   title: {
     color: '#F2EAD8',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     marginBottom: 2,
   },
   subtitle: {
     color: 'rgba(232,220,200,0.4)',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '500',
   },
 
-  // progress sits ABOVE the bottom reward track
-  barArea: {
-    position: 'absolute',
-    left: 95,
-    right: 18,
-    top: '55%',
-  },
+  barWrap: { marginBottom: 14 },
 
-  // rewards sit INSIDE the bottom track of the PNG
   rewardRow: {
-    position: 'absolute',
-    left: 25,
-    right: 18,
-    bottom: 10,
-    height: 28,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   rewardLabel: {
-    color: 'rgba(232,220,200,0.3)',
-    fontSize: 9,
+    color: 'rgba(232,220,200,0.28)',
+    fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 0.8,
+    letterSpacing: 1,
   },
-  rewardRight: {
+  rewardValues: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
   },
   xp: {
-  fontSize: 12,
-  fontWeight: '700',
-  marginLeft: 50,
-},
+    fontSize: 13,
+    fontWeight: '700',
+  },
   coins: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
   },
-  coinEmoji: { fontSize: 11 },
+  coinEmoji: { fontSize: 12 },
   coinNum: {
     color: '#E8B84A',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
   },
 
@@ -284,7 +293,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.12)',
     borderStyle: 'dashed',
-    marginTop: 4,
+    marginTop: 2,
   },
   createText: {
     color: 'rgba(167,139,250,0.55)',
